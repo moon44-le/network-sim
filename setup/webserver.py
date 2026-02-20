@@ -2,6 +2,8 @@ import yaml
 import shlex
 import subprocess # Für lokale Tests, später durch SSH (paramiko) ersetzbar
 
+from pathlib import Path
+
 def create_kvm_command(config_path):
     # 1. YAML Datei laden
     with open(config_path, 'r') as file:
@@ -34,13 +36,31 @@ def create_kvm_command(config_path):
 
 # --- HAUPTPROGRAMM ---
 if __name__ == "__main__":
-    config_file = 'vm_config.yaml'
+    config_file = './setup/vm_config.yaml'
     
     print(f"--- Lade Konfiguration aus {config_file} ---")
-    final_cmd = create_kvm_command(config_file)
-    
-    print("\nFolgender Befehl würde an den Server gestreamt werden:")
-    print(f"\033[96m{final_cmd}\033[0m") # In Cyan ausgegeben für bessere Lesbarkeit
+    try:
+        final_cmd = create_kvm_command(config_file)
+    except FileNotFoundError:
+    # Dieser Teil wird nur ausgeführt, wenn die Datei fehlt
+        current_dir = Path.cwd()
+        print(f"Fehler: Die Datei '{config_file}' wurde nicht gefunden.")
+        print(f"Du befindest dich gerade in: {current_dir}")
+        # Falls du wissen willst, wo die Skript-Datei selbst liegt:
+        script_dir = Path(__file__).parent
+        print(f"Das Skript liegt in: {script_dir}")
+    except PermissionError:
+        # Falls die Datei da ist, du aber keine Leserechte hast
+        print("Fehler: Du hast keine Berechtigung, diese Datei zu lesen.")
+    except Exception as e:
+        # Ein 'Fangnetz' für alle anderen unerwarteten Fehler
+        print(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
+    finally:
+        # Dieser Teil wird IMMER ausgeführt, egal ob ein Fehler auftrat oder nicht
+        print("--------------------------------")
+
+        print("\nFolgender Befehl würde an den Server gestreamt werden:")
+        print(f"\033[96m{final_cmd}\033[0m") # In Cyan ausgegeben für bessere Lesbarkeit
     
     # Hier käme später deine SSH-Logik (z.B. mit Paramiko)
     # ssh.exec_command(final_cmd)
