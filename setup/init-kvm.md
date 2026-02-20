@@ -2,7 +2,10 @@
 
 KVM (Kernel-based Virtual Machine) ist eine Open-Source-Virtualisierungstechnologie für Linux, die den Linux-Kernel in einen Hypervisor verwandelt. Sie ermöglicht es, mehrere isolierte virtuelle Maschinen (Gäste) mit fast nativer Geschwindigkeit direkt auf der Hardware des Host-Systems auszuführen.
 
+## Funktionen
 
+* Installieren der benötigten Pakete
+* Setzen der Gruppenrechte "libvirt kvm"
 
 ### Benötigte Pakete für KVM-Virtualisierung
 
