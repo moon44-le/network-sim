@@ -6,7 +6,8 @@ cd "$(dirname "$0")"
 # 2. Installation (Paketmanager sind OS-spezifisch, aber der Aufruf ist sh-sicher)
 echo ">>> Schritt 1: Installation..."
 sudo apt-get update
-sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients libvirt-python bridge-utils virt-manager wget
+sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients libvirt-python bridge-utils virt-manager wget libvirt-dev python3-dev
+sudo pip install libvirt-python pyyaml
 
 # 3. Gruppen-Check (Ohne Arrays!)
 # Wir nutzen eine einfache Schleife über einen String
