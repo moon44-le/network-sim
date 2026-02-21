@@ -1,7 +1,5 @@
-# Definition der Ziel-VM
-vm_metadata:
-  name: "debian-prod-01"
-  ram_mb: 2048
+- name: "debian-prod-01"
+  ram: 2048
   vcpus: 2
-  disk_gb: 40
+  disk: 40
   os_type: "debian11"

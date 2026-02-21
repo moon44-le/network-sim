@@ -24,11 +24,6 @@ sudo apt-get install -y \
 # da die Pakete nun schon via apt im System sind.
 echo "Abhängigkeiten sind nun über das System installiert."
 
-
-# Python-Bibliotheken installieren
-# echo "Installiere libvirt-python via pip..."
-# pip3 install --user libvirt-python pyyaml
-
 # 3. Gruppen-Check (Ohne Arrays!)
 # Wir nutzen eine einfache Schleife über einen String
 needed_groups="libvirt kvm"
@@ -53,11 +48,11 @@ if [ "$restart_needed" -eq 1 ] && [ "$ENV_RESTARTED" != "true" ]; then
 fi
 
 # 5. ISO Download
-iso_dir="$HOME/Downloads"
+iso_dir="/var/lib/libvirt/boot/"
 iso_name="debian-12-netinst.iso"
-iso_url="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.9.0-amd64-netinst.iso"
-
-if [ ! -f "$iso_dir/$iso_name" ]; then
+iso_url="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.3.0-amd64-netinst.iso"
+echo -f "$iso_url"
+if [ ! -f"$iso_dir/$iso_name" ]; then
     echo ">>> Schritt 3: Download..."
     wget -O "$iso_dir/$iso_name" "$iso_url"
 fi
