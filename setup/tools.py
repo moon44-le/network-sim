@@ -19,7 +19,6 @@ class UI:
 class KVM:
     @staticmethod
     def is_installed(vm_name):
-        # --name gibt nur die Namen zurück, --all zeigt auch ausgeschaltete VMs
         check_cmd = ["virsh", "list", "--all", "--name"]
         result = subprocess.run(check_cmd, capture_output=True, text=True)
         installed_vms = result.stdout.splitlines()
@@ -27,8 +26,6 @@ class KVM:
 
     @staticmethod
     def delete(vm_name):
-     #   subprocess.run(["virsh", "destroy", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-     #   subprocess.run(["virsh", "undefine", name, "--remove-all-storage"], check=True)
         subprocess.run(
             ["virsh", "destroy", vm_name],
             stdout=subprocess.DEVNULL, 

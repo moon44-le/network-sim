@@ -1,4 +1,5 @@
 from tools import UI, KVM
+import config 
 
 import yaml
 import shlex
@@ -6,13 +7,7 @@ import subprocess # Für lokale Tests, später durch SSH (paramiko) ersetzbar
 
 from pathlib import Path
 
-
-def is_vm_installed(vm_name):
-    # --name gibt nur die Namen zurück, --all zeigt auch ausgeschaltete VMs
-    check_cmd = ["virsh", "list", "--all", "--name"]
-    result = subprocess.run(check_cmd, capture_output=True, text=True)
-    installed_vms = result.stdout.splitlines()
-    return vm_name in [name.strip() for name in installed_vms]
+config_file = './setup/vm_config.yaml'
 
 def create_kvm_command(config_path):
     # 1. YAML Datei laden
@@ -46,10 +41,11 @@ def create_kvm_command(config_path):
 # --- HAUPTPROGRAMM ---
 if __name__ == "__main__":
     UI.clear
-    config_file = './setup/vm_config.yaml'
     print(f"--- Lade Konfiguration aus {config_file} ---")
     try:
+        config_file = './setup/vm_config.yaml'
         vm = create_kvm_command(config_file)
+        
     except FileNotFoundError:
         current_dir = Path.cwd()
         print(f"Fehler: Die Datei '{config_file}' wurde nicht gefunden.")
