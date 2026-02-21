@@ -10,6 +10,12 @@ class UI:
     YELLOW = "\033[33m"
     RESET = "\033[0m"
 
+    @staticmethod
+    def clear_screen():
+        # 'cls' für Windows, 'clear' für Linux/macOS
+        command = "cls" if os.name == "nt" else "clear"
+        subprocess.run([command])
+
 def is_vm_installed(vm_name):
     # --name gibt nur die Namen zurück, --all zeigt auch ausgeschaltete VMs
     check_cmd = ["virsh", "list", "--all", "--name"]
@@ -48,6 +54,7 @@ def create_kvm_command(config_path):
 
 # --- HAUPTPROGRAMM ---
 if __name__ == "__main__":
+    UI.clear_screen
     config_file = './setup/vm_config.yaml'
     print(f"--- Lade Konfiguration aus {config_file} ---")
     try:
@@ -64,6 +71,7 @@ if __name__ == "__main__":
         print(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
     finally:
         print("--------------------------------")
+    
     
     print(f"\nErstelle KVM {vm['safe_name']} ")
     try:
