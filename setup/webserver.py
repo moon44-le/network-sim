@@ -1,20 +1,11 @@
+from tools import UI, KVM
+
 import yaml
 import shlex
 import subprocess # Für lokale Tests, später durch SSH (paramiko) ersetzbar
 
 from pathlib import Path
 
-class UI:
-    GREEN = "\033[32m"
-    RED = "\033[31m"
-    YELLOW = "\033[33m"
-    RESET = "\033[0m"
-
-    @staticmethod
-    def clear_screen():
-        # 'cls' für Windows, 'clear' für Linux/macOS
-        command = "cls" if os.name == "nt" else "clear"
-        subprocess.run([command])
 
 def is_vm_installed(vm_name):
     # --name gibt nur die Namen zurück, --all zeigt auch ausgeschaltete VMs
@@ -54,7 +45,7 @@ def create_kvm_command(config_path):
 
 # --- HAUPTPROGRAMM ---
 if __name__ == "__main__":
-    UI.clear_screen
+    UI.clear
     config_file = './setup/vm_config.yaml'
     print(f"--- Lade Konfiguration aus {config_file} ---")
     try:
@@ -78,25 +69,13 @@ if __name__ == "__main__":
         
 
         # Anwendung:
-        if is_vm_installed(vm['safe_name']):
+        if KVM.is_installed(vm['safe_name']):
             print(f"{UI.YELLOW}[ INFO ] VM '{vm['safe_name']}' ist bereits im System registriert.{UI.RESET}")
             choice = input(f"Möchtest du sie [ü]berschreiben oder [b]ehalten? (ü/b): {UI.RESET}").lower()
 
             if choice == 'ü':
                 print(f"Lösche alte VM '{vm['safe_name']}'...")
-                # Erst stoppen (erzwingen), dann löschen inklusive Speicher
-                subprocess.run(
-                    ["virsh", "destroy", 
-                    vm['safe_name']],
-                    stdout=subprocess.DEVNULL, 
-                    stderr=subprocess.DEVNULL, 
-                )
-                subprocess.run(
-                    ["virsh", "undefine", 
-                    vm['safe_name'], "--remove-all-storage"], 
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    check=True)
+                KVM.delete(vm['safe_name'])
             else:
                 print(f"{UI.GREEN}Behalte bestehende VM. Installation übersprungen.{UI.RESET}")
                 
