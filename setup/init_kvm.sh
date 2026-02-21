@@ -5,10 +5,10 @@ cd "$(dirname "$0")"
 
 # 2. Installation (Paketmanager sind OS-spezifisch, aber der Aufruf ist sh-sicher)
 echo ">>> Schritt 1: Installation..."
-sudo apt-get update
+# sudo apt-get update
 
 # System-Abhängigkeiten installieren
-sudo apt-get update
+# WICHTIG: libvirt-python ist über apt oft stabiler als über pip
 sudo apt-get install -y \
     qemu-kvm \
     libvirt-daemon-system \
@@ -16,14 +16,18 @@ sudo apt-get install -y \
     bridge-utils \
     virt-manager \
     wget \
-    libvirt-dev \
-    python3-dev \
     python3-pip \
-    python3-yaml
+    python3-yaml \
+    python3-libvirt  # <--- Installiere es direkt über das OS!
+
+# Den pip-Teil kannst du löschen oder auskommentieren, 
+# da die Pakete nun schon via apt im System sind.
+echo "Abhängigkeiten sind nun über das System installiert."
+
 
 # Python-Bibliotheken installieren
-echo "Installiere libvirt-python via pip..."
-pip3 install --user libvirt-python pyyaml
+# echo "Installiere libvirt-python via pip..."
+# pip3 install --user libvirt-python pyyaml
 
 # 3. Gruppen-Check (Ohne Arrays!)
 # Wir nutzen eine einfache Schleife über einen String
