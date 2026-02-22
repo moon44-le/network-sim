@@ -1,18 +1,19 @@
-from tools import UI, KVM
-import config 
+
+
 
 import os
 import yaml
 import shlex
 import subprocess # Für lokale Tests, später durch SSH (paramiko) ersetzbar
 
-from pathlib import Path
+import config 
+from lib.tools import UI
+from lib.kvm import KVM
 
-# config.NET_SIM_VMS
 
 config_file = './setup/vm_config.yaml'
 # Pfad zum ISO (entspricht deinem wget-Pfad)
-ISO_PATH = os.path.expanduser("/var/lib/libvirt/boot//debian-12-netinst.iso")
+ISO_PATH = os.path.expanduser("/var/lib/libvirt/boot/debian-12-netinst.iso")
 def start_deployment():
     UI.clear()
     UI.header("Deployment startet")
@@ -22,16 +23,16 @@ def start_deployment():
        # print(config.NET_SIM_VMS)
         print(vm['name'])
         # 1. Existiert sie schon?
-        if KVM.is_installed(vm['name']):
+        if KVM.is_installed(vm['hostname']):
             print(f"{UI.YELLOW}[ INFO ] VM '{vm['name']}' ist bereits im System registriert.{UI.RESET}")
             choice = input(f"Möchtest du sie [ü]berschreiben oder [b]ehalten? (ü/b): {UI.RESET}").lower()
 
             if choice == 'ü':
                 print(f"Lösche alte VM '{vm['name']}'...")
-                KVM.delete(vm['name'])
+                KVM.delete(vm['hostname'])
             else:
                 print(f"{UI.GREEN}Behalte bestehende VM. Installation übersprungen.{UI.RESET}")  
-                return 
+                continue 
             pass
         
         # 2. Erstellen
@@ -44,15 +45,13 @@ def start_deployment():
 # --- HAUPTPROGRAMM ---
 if __name__ == "__main__":
     
-    
     try:
         start_deployment()
- 
     except subprocess.CalledProcessError as e:
         print(f"{UI.RED}DER KVM-BEFEHL SCHLUG FEHL!{UI.RESET}")
         print(f"Meldung: {e.stderr.strip()}")
     except Exception as e:
-        print(f"Exception in start_deployment: {e.stderr.strip()}")
+        print(f"Exception in start_deployment: {e}")
     finally:
         print("--------------------------------")
     

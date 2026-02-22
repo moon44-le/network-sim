@@ -1,5 +1,13 @@
-- name: "debian-prod-01"
+- name: "Debian 01"
+  hostname: "debian_prod_01"
   ram: 2048
   vcpus: 2
   disk: 40
-  os_type: "debian11"
+  os_type: "debian12"
+
+- name: "Debian 02"
+  hostname: "debian_prod_02"
+  ram: 2048
+  vcpus: 2
+  disk: 40
+  os_type: "debian12"

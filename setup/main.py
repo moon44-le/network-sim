@@ -1,0 +1,97 @@
+import subprocess
+
+from lib.inventory import Inventory
+from lib.kvm import KVM
+import config
+
+import lib.tools as UI
+from lib.inventory import Inventory
+
+def show_terminal_overview():
+    # 1. Daten holen (die Liste von Dictionaries)
+    report = Inventory.get_status_report(config.NET_SIM_VMS)
+    
+    print("\n" + "="*65)
+    print(f"{'STATUS':<12} | {'STATE':<12} | {'VM NAME':<20} | {'SLUG'}")
+    print("-"*65)
+    
+    for vm in report:
+        # Wir extrahieren die Werte aus dem Dictionary
+        status = vm['status']
+        state  = vm['state']
+        name   = vm['name']
+        slug   = vm['slug']
+        color  = vm.get('color', '')
+        reset  = "\033[0m"
+        
+        # :<12 sorgt dafür, dass der Text linksbündig auf 12 Zeichen aufgefüllt wird
+        print(f"{color}{status:<12}{reset} | {state:<12} | {name:<20} | {slug}")
+        
+    print("="*65 + "\n")
+
+
+def start_kvm_shell():
+    while True:
+        # 1. Status anzeigen für den Überblick
+        # Inventory.print_report(config.NET_SIM_VMS) # Deine Tabellen-Ausgabe
+        
+        # 2. Eingabeaufforderung
+        cmd_input = input("\nkvm-manager> ").strip().lower()
+        
+        if not cmd_input:
+            continue
+        
+        if cmd_input in ['q', 'exit', 'quit']:
+            break
+
+        # 3. Syntax zerlegen: "start slug01" -> ["start", "slug01"]
+        parts = cmd_input.split()
+        action = parts[0]
+        target = parts[1] if len(parts) > 1 else None
+
+        if not target:
+            print("[!] Syntax-Fehler: Bitte 'aktion slug' oder 'aktion all' eingeben.")
+            continue
+
+        # 4. Logik-Verteilung
+        # Wir sammeln alle betroffenen Slugs in einer Liste
+        report = Inventory.get_status_report(config.NET_SIM_VMS)
+        
+        if target == "all":
+            # Alle Slugs nehmen, die entweder in der YAML stehen oder Geister sind
+            targets = [vm['slug'] for vm in report]
+        else:
+            targets = [target]
+
+        # 5. Ausführung
+        for slug in targets:
+            if action == "start":
+                KVM.start(slug)
+            elif action == "destroy":
+                KVM.destroy(slug)
+            elif action == "undefine":
+                # Nutzt deine bereits kaskadierte Logik (inkl. destroy)
+                KVM.undefine(slug)
+            elif action == "create" and target != "all":
+                # Für create brauchen wir die Config aus der YAML
+                vm_cfg = next((vm for vm in config.NET_SIM_VMS if vm.get('hostname') == slug), None)
+                if vm_cfg:
+                    KVM.create(vm_cfg, "/path/to/iso")
+                else:
+                    print(f"[!] Keine Konfiguration für '{slug}' in YAML gefunden.")
+            else:
+                print(f"[!] Unbekannte Aktion oder ungültige Kombination: {action}")
+                break
+
+if __name__ == "__main__":
+    try:
+        show_terminal_overview()
+        start_kvm_shell()
+
+    except subprocess.CalledProcessError as e:
+        print(f"{UI.RED}DER KVM-BEFEHL SCHLUG FEHL!{UI.RESET}")
+        print(f"CalledProcessError: {e.stderr.strip()}")
+    except Exception as e:
+        print(f"Exception: {e}")
+    finally:
+        print("--------------------------------")
