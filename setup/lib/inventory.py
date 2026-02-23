@@ -1,5 +1,5 @@
 import subprocess
-#from lib.kvm import KVM
+from lib.tools import UI
 
 class Inventory:
 
@@ -44,7 +44,7 @@ class Inventory:
                     "slug": slug,
                     "status": "INSTALLED",
                     "state": state.upper(),
-                    "color": "\033[32m" if state == "running" else "\033[36m" # Grün wenn läuft, Cyan wenn aus
+                    "color": UI.GREEN if state == "running" else "\033[36m" # Grün wenn läuft, Cyan wenn aus
                 })
             else:
                 report.append({
@@ -52,7 +52,7 @@ class Inventory:
                     "slug": slug,
                     "status": "MISSING",
                     "state": "NOT FOUND",
-                    "color": "\033[33m" # Gelb
+                    "color": UI.WHITE
                 })
         
         # 2. Unbekannte VMs (Schatten-IT)
@@ -63,7 +63,7 @@ class Inventory:
                     "slug": h_name,
                     "status": "UNKNOWN",
                     "state": h_state.upper(),
-                    "color": "\033[31m" # Rot
+                    "color": UI.YELLOW 
                 })
 
         return report

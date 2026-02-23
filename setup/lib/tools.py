@@ -2,7 +2,8 @@ import subprocess
 import os
 
 class UI:
-    
+
+    WHITE = "\033[37m"
     GREEN = "\033[32m"
     YELLOW = "\033[33m"
     RED = "\033[31m"

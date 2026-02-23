@@ -2,10 +2,8 @@ import subprocess
 
 from lib.inventory import Inventory
 from lib.kvm import KVM
+from lib.tools import UI
 import config
-
-import lib.tools as UI
-from lib.inventory import Inventory
 
 def show_terminal_overview():
     # 1. Daten holen (die Liste von Dictionaries)
@@ -31,18 +29,38 @@ def show_terminal_overview():
 
 
 def start_kvm_shell():
+
+    syntax_help = (
+        f"SYNTAX"
+        f"  start <slug|all>    - Startet die VM(s)\n"
+        f"  destroy <slug|all>  - Stoppt die VM(s) sofort\n"
+        f"  undefine <slug|all> - Löscht die VM(s) kaskadiert\n"
+        f"  create <slug>       - Erstellt VM aus YAML-Config\n"
+        f"  list                - Zeigt den Statusbericht\n"
+        f"  --help              - Zeigt diese Hilfe an\n"
+        f"  exit                - Beendet das Programm"
+    )
+
+
     while True:
         # 1. Status anzeigen für den Überblick
-        # Inventory.print_report(config.NET_SIM_VMS) # Deine Tabellen-Ausgabe
-        
+  
         # 2. Eingabeaufforderung
-        cmd_input = input("\nkvm-manager> ").strip().lower()
+        cmd_input = input(f"{UI.WHITE}KVM Manager: ").strip().lower()
         
         if not cmd_input:
             continue
         
-        if cmd_input in ['q', 'exit', 'quit']:
+        if cmd_input in ["exit", "quit", "q"]:
             break
+
+        if cmd_input == "list":
+           show_terminal_overview()
+           continue
+
+        if cmd_input == "--help":
+            print(f"\n{syntax_help}\n")
+            continue
 
         # 3. Syntax zerlegen: "start slug01" -> ["start", "slug01"]
         parts = cmd_input.split()
@@ -75,8 +93,10 @@ def start_kvm_shell():
             elif action == "create" and target != "all":
                 # Für create brauchen wir die Config aus der YAML
                 vm_cfg = next((vm for vm in config.NET_SIM_VMS if vm.get('hostname') == slug), None)
+                vm_iso_path = "fdfd"
+
                 if vm_cfg:
-                    KVM.create(vm_cfg, "/path/to/iso")
+                    KVM.create(vm_cfg, vm_iso_path)
                 else:
                     print(f"[!] Keine Konfiguration für '{slug}' in YAML gefunden.")
             else:
