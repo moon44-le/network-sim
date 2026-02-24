@@ -1,4 +1,5 @@
 import subprocess
+import os
 from lib.tools import UI
 
 class Inventory:

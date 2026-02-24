@@ -96,7 +96,7 @@ def start_kvm_shell():
                 vm_iso_path = "fdfd"
 
                 if vm_cfg:
-                    KVM.create(vm_cfg, vm_iso_path)
+                    KVM.create(vm_cfg)
                 else:
                     print(f"[!] Keine Konfiguration für '{slug}' in YAML gefunden.")
             else:

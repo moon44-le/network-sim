@@ -20,8 +20,6 @@ sudo apt-get install -y \
     python3-yaml \
     python3-libvirt  # <--- Installiere es direkt über das OS!
 
-# Den pip-Teil kannst du löschen oder auskommentieren, 
-# da die Pakete nun schon via apt im System sind.
 echo "Abhängigkeiten sind nun über das System installiert."
 
 # 3. Gruppen-Check (Ohne Arrays!)
@@ -47,14 +45,13 @@ if [ "$restart_needed" -eq 1 ] && [ "$ENV_RESTARTED" != "true" ]; then
     exec sg libvirt "sh $0"
 fi
 
-# 5. ISO Download
-iso_dir="/var/lib/libvirt/boot/"
-iso_name="debian-12-netinst.iso"
-iso_url="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.3.0-amd64-netinst.iso"
-echo -f "$iso_url"
-if [ ! -f"$iso_dir/$iso_name" ]; then
-    echo ">>> Schritt 3: Download..."
-    wget -O "$iso_dir/$iso_name" "$iso_url"
-fi
-
-echo "--- Fertig (POSIX Modus) ---"
+#5. ISO Download
+#iso_dir="/var/lib/libvirt/boot/"
+#iso_name="debian-12-netinst.iso"
+#iso_url="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.3.0-amd64-netinst.iso"
+#echo -f "$iso_url"
+#if [ ! -f"$iso_dir/$iso_name" ]; then
+#    echo ">>> Schritt 3: Download..."
+#    wget -O "$iso_dir/$iso_name" "$iso_url"
+#fi
+#echo "--- Fertig (POSIX Modus) ---"

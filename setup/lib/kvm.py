@@ -1,7 +1,8 @@
 import subprocess
-
+import os
 from lib.tools import UI
 from lib.inventory import Inventory
+
 
 class KVM:
 
@@ -72,23 +73,42 @@ class KVM:
         cmd = ["sudo", "virsh", "start", vm_name]
         return subprocess.run(cmd, capture_output=True).returncode == 0
         
-    @staticmethod
-    def create(vm_config: dict, iso_path: str):
-        print(f"Erstelle VM '{vm_config['name']}'...")
+ #   @staticmethod
+ #   def create(vm_config: dict, iso_path: str):
+ #       print(f"Erstelle VM '{vm_config['name']}'...")
         
-        # Wir bauen das Argument-Array (List) für subprocess
+    @staticmethod
+    def create(vm_config: dict):
+        
+        public_key = KVM.get_public_key()
+        if not public_key:
+            return False
+        
+        hostname = vm_config['hostname']
+        iso_path = vm_config['iso_path']
+        
+        # Preseed-Kommandos für die Automatisierung
+        # Wir sagen dem Installer: Installiere SSH und lege den Key ab.
+        extra_args = (
+            f"pkgsel/include=openssh-server,sudo "
+            f"preseed/late_command=\"in-target mkdir -p /home/kvm-admin/.ssh; "
+            f"in-target /bin/sh -c 'echo {public_key} > /home/kvm-admin/.ssh/authorized_keys'; "
+            f"in-target chown -R kvm-admin:kvm-admin /home/kvm-admin/.ssh; "
+            f"in-target chmod 700 /home/kvm-admin/.ssh; "
+            f"in-target chmod 600 /home/kvm-admin/.ssh/authorized_keys\""
+        )
+
         cmd = [
-            "virt-install",
-            "--name", vm_config['hostname'],
+            "sudo", "virt-install",
+            "--name", hostname,
             "--ram", str(vm_config['ram']),
             "--vcpus", str(vm_config['vcpus']),
-            "--os-variant", vm_config.get('os', 'debian12'),
-            "--disk", f"size={vm_config.get('disk', 10)},format=qcow2",
-            "--cdrom", iso_path,
+            "--disk", f"path=/var/lib/libvirt/images/{hostname}.qcow2,size={vm_config['disk']}",
+            "--os-variant", "debian12",
+            "--location", iso_path,
             "--network", "network=default",
-            "--graphics", "vnc",
-            "--noautoconsole",
-            "--wait", "0" # Damit das Skript nicht blockiert, bis die Installation fertig ist
+            "--graphics", "none",
+            "--extra-args", f"console=ttyS0,115200n8 serial {extra_args}"
         ]
 
         try:
@@ -99,3 +119,20 @@ class KVM:
         except subprocess.CalledProcessError as e:
             print(f"\033[31mFehler bei virt-install: {e.stderr}\033[0m")
             return False
+        
+
+
+    def get_public_key():
+        # Pfad zum Standard-Key (id_rsa.pub oder id_ed25519.pub)
+        key_path = os.path.expanduser("~/.ssh/id_rsa.pub")
+        
+        # Falls id_rsa nicht existiert, probieren wir ed25519 (moderner Standard)
+        if not os.path.exists(key_path):
+            key_path = os.path.expanduser("~/.ssh/id_ed25519.pub")
+
+        try:
+            with open(key_path, "r") as f:
+                return f.read().strip()
+        except FileNotFoundError:
+            print(f"[!] Fehler: Kein Public Key unter {key_path} gefunden!")
+            return None
