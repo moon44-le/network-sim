@@ -1,3 +1,0 @@
-volumes:
-  - ./config/dhcpd.conf:/etc/dhcp/dhcpd.conf   # Konfigurationsdatei des Servers
-  - ./data:/var/lib/dhcp                       # Daten des Servers  
