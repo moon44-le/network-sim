@@ -41,12 +41,12 @@ def start_kvm_shell():
         f"  exit                - Beendet das Programm"
     )
 
-    UI.
+    UI.setup_shell_history(UI.history_file)
     while True:
         # 1. Status anzeigen für den Überblick
         
         # 2. Eingabeaufforderung
-        cmd_input = input(f"{UI.WHITE}KVM Manager: ").strip().lower()
+        cmd_input = input(f"KVM Manager:").strip().lower()
         
         if not cmd_input:
             continue
