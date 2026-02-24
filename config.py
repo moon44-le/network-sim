@@ -1,6 +1,6 @@
 import yaml
 
-def load_network_config(filepath="./setup/vm_config.yaml"):
+def load_network_config(filepath="./data/vm_config.yaml"):
 
     try:
         with open(filepath, 'r') as file:

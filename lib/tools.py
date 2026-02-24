@@ -1,5 +1,6 @@
 import subprocess
 import os
+import readline
 
 class UI:
 
@@ -17,3 +18,19 @@ class UI:
     @staticmethod
     def header(text):
         print(f"{UI.GREEN}=== {text} ==={UI.RESET}\n")
+
+    def setup_shell_history():
+        history_file = os.path.expanduser("~/.kvm_manager_history")
+        # 1. Versuche, die alte History zu laden
+        if os.path.exists(history_file):
+            try:
+                readline.read_history_file(history_file)
+            except Exception:
+                pass # Falls die Datei korrupt ist
+
+        # 2. Automatisch beim Beenden speichern
+        import atexit
+        atexit.register(readline.write_history_file, history_file)
+
+        # 3. (Optional) Tab-Completion aktivieren (sehr komfortabel!)
+        readline.parse_and_bind("tab: complete")

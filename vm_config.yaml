@@ -1,8 +1,0 @@
-- name: "Debian 01"
-  hostname: "debian_prod_01"
-  ram: 2048
-  vcpus: 2 
-  disk: 40
-  os_type: "debian12"
-  iso_path: "/setup/data/debian-12-generic-amd64.qcow2"
-
