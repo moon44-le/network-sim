@@ -20,11 +20,11 @@ class UI:
         print(f"{UI.GREEN}=== {text} ==={UI.RESET}\n")
 
     history_file = os.path.expanduser("~/.kvm_manager_history")
-# Verhindert, dass bestimmte Zeichen "stehenbleiben"
+    # Verhindert, dass bestimmte Zeichen "stehenbleiben"
     readline.set_completer_delims(' \t\n=') 
     
     # Standard-Verhalten für Backspace auf manchen Linux-Systemen erzwingen
-    readline.parse_and_bind('"\e[3~": delete-char')
+    readline.parse_and_bind(r'"\e[3~": delete-char')
     def setup_shell_history(history_file):
         
         # 1. Versuche, die alte History zu laden

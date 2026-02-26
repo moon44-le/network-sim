@@ -1,9 +1,11 @@
 import subprocess
 
 from lib.inventory import Inventory
+from lib.bridge import Bridge
 from lib.kvm import KVM
 from lib.tools import UI
 import config
+
 
 def show_terminal_overview():
     # 1. Daten holen (die Liste von Dictionaries)
@@ -42,10 +44,9 @@ def start_kvm_shell():
     )
 
     UI.setup_shell_history(UI.history_file)
+
     while True:
-        # 1. Status anzeigen für den Überblick
-        
-        # 2. Eingabeaufforderung
+  
         cmd_input = input(f"KVM Manager:").strip().lower()
         
         if not cmd_input:
@@ -105,6 +106,7 @@ def start_kvm_shell():
 
 if __name__ == "__main__":
     try:
+      #  Bridge.create_isolated("br-intern")
         show_terminal_overview()
         start_kvm_shell()
 

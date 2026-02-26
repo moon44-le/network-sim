@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 # 2. Installation (Paketmanager sind OS-spezifisch, aber der Aufruf ist sh-sicher)
 echo ">>> Schritt 1: Installation..."
-# sudo apt-get update
+sudo apt-get update
 
 # System-Abhängigkeiten installieren
 # WICHTIG: libvirt-python ist über apt oft stabiler als über pip
@@ -18,7 +18,8 @@ sudo apt-get install -y \
     wget \
     python3-pip \
     python3-yaml \
-    python3-libvirt  # <--- Installiere es direkt über das OS!
+    python3-libvirt \
+    cloud-image-utils
 
 echo "Abhängigkeiten sind nun über das System installiert."
 

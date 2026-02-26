@@ -4,7 +4,10 @@ def load_network_config(filepath="./data/vm_config.yaml"):
 
     try:
         with open(filepath, 'r') as file:
-            return yaml.safe_load(file)
+
+            data = yaml.safe_load(file)
+            return data.get('vms', [])
+
     except FileNotFoundError:
         print(f"FileNotFoundError: {filepath}")
         return []
