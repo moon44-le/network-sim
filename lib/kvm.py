@@ -7,6 +7,8 @@ from lib.inventory import Inventory
 
 class KVM:
 
+    STORAGE_POOL = "/var/lib/libvirt/images"
+
     @staticmethod
     def is_installed(vm_name):
         check_cmd = ["virsh", "list", "--all", "--name"]
@@ -84,45 +86,24 @@ class KVM:
             print(f"[!] Fehler: Kein Public Key unter {key_path} gefunden!")
             return None
         
-
-
     @staticmethod
     def create(vm_config: dict):
-        """
-        Erstellt eine KVM aus einem Debian-Cloud-Image.
-        vm_config: {
-            "hostname": "mein-server",
-            "ram": 2048,
-            "vcpus": 2,
-            "disk": 20, # in GB
-            "networks": ["default", "br-intern"], # Liste von Netzwerken
-            "base_image": "/pfad/zu/debian-12-generic-amd64.qcow2"
-        }
-        """
         hostname = vm_config['hostname']
-        storage_pool = "/var/lib/libvirt/images"
-        target_disk = f"{storage_pool}/{hostname}.qcow2"
-        seed_iso = f"{storage_pool}/{hostname}-seed.iso"
-
         print(f"[*] Starte Deployment für {hostname}...")
-        KVM.prepare_disk(vm_config)
 
-        # 1. Disk vorbereiten (Kopieren & Resize)
-        try:
-            shutil.copy(vm_config['base_image'], target_disk)
-            subprocess.run(["sudo", "qemu-img", "resize", target_disk, f"{vm_config['disk']}G"], check=True)
-            # Wichtig: Berechtigungen für libvirt setzen
-            subprocess.run(["sudo", "chown", "libvirt-qemu:kvm", target_disk], check=True)
-        except Exception as e:
-            print(f"[-] Fehler bei Disk-Vorbereitung: {e}")
+        # 1. Disk vorbereiten
+        if not KVM.prepare_disk(vm_config):
             return False
 
-        # 2. Cloud-Init (seed.iso) erstellen
-        if not KVM._generate_seed_iso(hostname, seed_iso):
+        # 2. Cloud-Init (seed.iso) vorbereiten
+        if not KVM._generate_and_move_seed_iso(vm_config):
             return False
 
-        # 3. Netzwerk-Parameter dynamisch aufbauen
-        # In Python nutzen wir List-Comprehension (ähnlich wie array_map in PHP)
+        # Pfade für virt-install (direkt aus dem Pool gebildet)
+        target_disk = f"{KVM.STORAGE_POOL}/{hostname}.qcow2"
+        seed_iso = f"{KVM.STORAGE_POOL}/{hostname}-seed.iso"
+
+        # 3. Netzwerk-Parameter (PHP: array_merge Logik)
         net_args = []
         for net in vm_config['networks']:
             if net == "default":
@@ -130,7 +111,7 @@ class KVM:
             else:
                 net_args.extend(["--network", f"bridge={net}"])
 
-        # 4. virt-install Befehl
+        # 4. virt-install
         cmd = [
             "sudo", "virt-install",
             "--name", hostname,
@@ -142,7 +123,7 @@ class KVM:
             "--graphics", "none",
             "--import",
             "--noautoconsole"
-        ] + net_args # Hängt die Netzwerk-Argumente an die Liste an
+        ] + net_args
 
         try:
             subprocess.run(cmd, check=True)
@@ -153,71 +134,45 @@ class KVM:
             return False
 
     @staticmethod
-    def create_seed(vm_config: dict):
-        """
-        Erstellt die seed.iso für Cloud-Init.
-        In PHP würde man hier ein assoziatives Array (Dictionary) validieren.
-        """
-        hostname = vm_config['hostname']
-        # Pfad, wo die ISO landen soll
-        seed_path = f"/var/lib/libvirt/images/{hostname}-seed.iso"
-        
-        # 1. User-Data (User & SSH-Key)
-        public_key = KVM.get_public_key()
-        user_data = f"""#cloud-config
-hostname: {hostname}
-users:
-  - name: kvm-admin
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: users, sudo
-    shell: /bin/bash
-    ssh_authorized_keys:
-      - {public_key}
-packages:
-  - qemu-guest-agent
-  - openssh-server
-"""
+    def prepare_disk(vm_config):
+        """Bildet den Pfad selbst aus KVM.STORAGE_POOL."""
+        target_path = f"{KVM.STORAGE_POOL}/{vm_config['hostname']}.qcow2"
+        try:
+            subprocess.run(["sudo", "cp", vm_config['base_image'], target_path], check=True)
+            subprocess.run(["sudo", "qemu-img", "resize", target_path, f"{vm_config['disk']}G"], check=True)
+            subprocess.run(["sudo", "chown", "libvirt-qemu:libvirt-qemu", target_path], check=True)
+            return True
+        except Exception as e:
+            print(f"[-] Disk-Fehler: {e}")
+            return False
 
-        # 2. Meta-Data (Instanz-ID)
+    @staticmethod
+    def _generate_and_move_seed_iso(vm_config):
+        """Bildet den Zielpfad ebenfalls intern."""
+        hostname = vm_config['hostname']
+        target_iso = f"{KVM.STORAGE_POOL}/{hostname}-seed.iso"
+        local_iso = f"./{hostname}-seed.iso"
+        
+        # Public Key einbinden
+        public_key = KVM.get_public_key()
+        
+        user_data = f"#cloud-config\nhostname: {hostname}\nusers:\n  - name: kvm-admin\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    ssh_authorized_keys:\n      - {public_key}\n"
         meta_data = f"instance-id: {hostname}\nlocal-hostname: {hostname}"
 
-        # 3. Network-Config (V2 Format)
-        # Wir gehen davon aus: 1. Interface (ens3) = DHCP/Default, 2. Interface (ens4) = br-intern
-        network_config = "version: 2\nethernets:\n  ens3:\n    dhcp4: true\n"
-        
-        # Falls es der DHCP-Server ist, braucht er eine statische IP auf ens4
-        if vm_config.get('role') == 'gateway':
-            static_ip = vm_config.get('static_ip_intern', '192.168.1.1/24')
-            network_config += f"  ens4:\n    addresses: [{static_ip}]\n"
-
-        # Temporäre Dateien schreiben
         try:
             with open("user-data", "w") as f: f.write(user_data)
             with open("meta-data", "w") as f: f.write(meta_data)
-            with open("network-config", "w") as f: f.write(network_config)
-
-            print(f"[*] Generiere Seed-ISO für {hostname}...")
-            # Der Befehl cloud-localds kombiniert alles zur ISO
-            subprocess.run([
-                "cloud-localds", 
-                "-n", "network-config", 
-                seed_path, 
-                "user-data", 
-                "meta-data"
-            ], check=True)
-
-            # Aufräumen (PHP: unlink)
-            for tmp_file in ["user-data", "meta-data", "network-config"]:
-                if os.path.exists(tmp_file):
-                    os.remove(tmp_file)
             
-            print(f"[+] Seed-ISO erstellt unter: {seed_path}")
-            return seed_path
-
+            subprocess.run(["cloud-localds", local_iso, "user-data", "meta-data"], check=True)
+            subprocess.run(["sudo", "mv", local_iso, target_iso], check=True)
+            subprocess.run(["sudo", "chown", "libvirt-qemu:libvirt-qemu", target_iso], check=True)
+            
+            for f in ["user-data", "meta-data"]: os.remove(f)
+            return True
         except Exception as e:
-            print(f"[-] Fehler beim Erstellen der Seed-ISO: {e}")
-            return None
-        
+            print(f"[-] Seed-Fehler: {e}")
+            return False
+          
     @staticmethod
     def generate_cloud_init_config(hostname, output_path):
         """
@@ -273,25 +228,24 @@ packages:
     @staticmethod
     def prepare_disk(vm_config: dict):
         hostname = vm_config['hostname']
-        base_image = vm_config['base_image'] # z.B. "./data/debian-12..."
+        base_image = vm_config['base_image']
         target_path = f"/var/lib/libvirt/images/{hostname}.qcow2"
 
         try:
+            # 1. Kopieren via SUDO (da Python selbst nicht in den Zielordner schreiben darf)
             print(f"[*] Kopiere Image nach {target_path}...")
-            # Wir nutzen sudo cp, um Schreibrechte in /var/lib/libvirt/images zu haben
             subprocess.run(["sudo", "cp", base_image, target_path], check=True)
 
-            print(f"[*] Passe Besitzer für Libvirt an...")
-            # WICHTIG: Libvirt muss die Datei lesen/schreiben dürfen
-            # Unter Debian/Ubuntu ist der User meist libvirt-qemu
+            # 2. Resize via SUDO
+            print(f"[*] Vergrößere Disk auf {vm_config['disk']}G...")
+            subprocess.run(["sudo", "qemu-img", "resize", target_path, f"{vm_config['disk']}G"], check=True)
+
+            # 3. Besitzer anpassen (Damit QEMU/Libvirt die Datei nutzen kann)
+            print(f"[*] Setze Berechtigungen für libvirt-qemu...")
             subprocess.run(["sudo", "chown", "libvirt-qemu:libvirt-qemu", target_path], check=True)
             subprocess.run(["sudo", "chmod", "660", target_path], check=True)
-
-            # Resize (wie besprochen)
-            size = f"{vm_config['disk']}G"
-            subprocess.run(["sudo", "qemu-img", "resize", target_path, size], check=True)
             
             return target_path
         except subprocess.CalledProcessError as e:
-            print(f"\033[31m[FEHLER] Berechtigungsproblem oder cp fehlgeschlagen: {e}\033[0m")
+            print(f"\033[31m[-] Fehler bei der Disk-Operation: {e}\033[0m")
             return None
