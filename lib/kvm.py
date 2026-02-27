@@ -16,10 +16,10 @@ class KVM:
         try:
             result = subprocess.run(check_cmd, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
-            print(f"\033[31mCalledProcessError: {e.stderr}\033[0m")
+            print(f"CalledProcessError: {e.stderr}")
             return False
         except Exception as e:
-            print(f"Exception in KVM.is_installed: {e}")
+            print(f"Exception: {e}")
         
         installed_vms = result.stdout.splitlines()
         return vm_name in [name.strip() for name in installed_vms]
@@ -72,13 +72,9 @@ class KVM:
         return subprocess.run(cmd, capture_output=True).returncode == 0
 
     def get_public_key():
-        # Pfad zum Standard-Key (id_rsa.pub oder id_ed25519.pub)
         key_path = os.path.expanduser("~/.ssh/id_rsa.pub")
-        
-        # Falls id_rsa nicht existiert, probieren wir ed25519 (moderner Standard)
         if not os.path.exists(key_path):
             key_path = os.path.expanduser("~/.ssh/id_ed25519.pub")
-
         try:
             with open(key_path, "r") as f:
                 return f.read().strip()
@@ -135,7 +131,6 @@ class KVM:
 
     @staticmethod
     def prepare_disk(vm_config):
-        """Bildet den Pfad selbst aus KVM.STORAGE_POOL."""
         target_path = f"{KVM.STORAGE_POOL}/{vm_config['hostname']}.qcow2"
         try:
             subprocess.run(["sudo", "cp", vm_config['base_image'], target_path], check=True)
@@ -172,80 +167,28 @@ class KVM:
         except Exception as e:
             print(f"[-] Seed-Fehler: {e}")
             return False
-          
-    @staticmethod
-    def generate_cloud_init_config(hostname, output_path):
-        """
-        Erstellt die user-data und meta-data und baut daraus die seed.iso
-        """
-        public_key = KVM.get_public_key()
-        if not public_key:
-            return False
-
-        # Cloud-Init Konfiguration (YAML-Format)
-        user_data = f"""#cloud-config
-hostname: {hostname}
-manage_etc_hosts: true
-users:
-  - name: kvm-admin
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: users, sudo
-    shell: /bin/bash
-    ssh_authorized_keys:
-      - {public_key}
-chpasswd:
-  list: |
-     kvm-admin:password  # Optional: Standardpasswort setzen
-  expire: False
-ssh_pwauth: True
-packages:
-  - qemu-guest-agent
-  - openssh-server
-"""
-        meta_data = f"instance-id: {hostname}\nlocal-hostname: {hostname}"
-
-        # Temporäre Dateien schreiben und mit genisoimage/mkisofs zur ISO machen
-        try:
-            with open("user-data", "w") as f: f.write(user_data)
-            with open("meta-data", "w") as f: f.write(meta_data)
-            
-            # Befehl zum Erstellen der seed.iso (Label MAPPING ist wichtig für Cloud-Init)
-            cmd = [
-                "genisoimage", "-output", output_path,
-                "-volid", "cidata", "-joliet", "-rock",
-                "user-data", "meta-data"
-            ]
-            subprocess.run(cmd, check=True, capture_output=True)
-            
-            # Aufräumen
-            os.remove("user-data")
-            os.remove("meta-data")
-            return True
-        except Exception as e:
-            print(f"Fehler beim Erstellen der seed.iso: {e}")
-            return False
         
-    @staticmethod
-    def prepare_disk(vm_config: dict):
-        hostname = vm_config['hostname']
-        base_image = vm_config['base_image']
-        target_path = f"/var/lib/libvirt/images/{hostname}.qcow2"
+ #   @staticmethod
+    #def prepare_disk(vm_config: dict):
+    #    hostname = vm_config['hostname']
+    #    base_image = vm_config['base_image']
+    #   target_path = f"/var/lib/libvirt/images/{hostname}.qcow2"
 
-        try:
+#        try:
             # 1. Kopieren via SUDO (da Python selbst nicht in den Zielordner schreiben darf)
-            print(f"[*] Kopiere Image nach {target_path}...")
-            subprocess.run(["sudo", "cp", base_image, target_path], check=True)
-
-            # 2. Resize via SUDO
-            print(f"[*] Vergrößere Disk auf {vm_config['disk']}G...")
-            subprocess.run(["sudo", "qemu-img", "resize", target_path, f"{vm_config['disk']}G"], check=True)
+#            print(f"[*] Kopiere Image nach {target_path}...")
+#            subprocess.run(["sudo", "cp", base_image, target_path], check=True)
+#
+#            # 2. Resize via SUDO
+#            print(f"[*] Vergrößere Disk auf {vm_config['disk']}G...")
+#            subprocess.run(["sudo", "qemu-img", "resize", target_path, f"{vm_config['disk']}G"], check=True)
 
             # 3. Besitzer anpassen (Damit QEMU/Libvirt die Datei nutzen kann)
-            print(f"[*] Setze Berechtigungen für libvirt-qemu...")
-            subprocess.run(["sudo", "chown", "libvirt-qemu:libvirt-qemu", target_path], check=True)
-            subprocess.run(["sudo", "chmod", "660", target_path], check=True)
+#            print(f"[*] Setze Berechtigungen für libvirt-qemu...")
+#            subprocess.run(["sudo", "chown", "libvirt-qemu:libvirt-qemu", target_path], check=True)
+#            subprocess.run(["sudo", "chmod", "660", target_path], check=True)
             
-            return target_path
-        except subprocess.CalledProcessError as e:
-            print(f"\033[31m[-] Fehler bei der Disk-Operation: {e}\033[0m")
-            return None
+#            return target_path
+#        except subprocess.CalledProcessError as e:
+#            print(f"\033[31m[-] Fehler bei der Disk-Operation: {e}\033[0m")
+#            return None
