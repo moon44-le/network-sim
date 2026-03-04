@@ -1,0 +1,43 @@
+# Infrastruktur
+networks:
+  - name: "br-intern"
+    bridge: "br0"
+    type: "isolated"
+
+# VM-Konfigurationen nach Typ
+vms:
+  gateways:
+    - hostname: "gw-router"
+      name: "aaa"
+      ram: 2048
+      vcpus: 1
+      disk: 10
+      networks: ["default", "br-intern"]
+      static_ip_intern: "192.168.1.1/24"
+      require: null
+      provisioning:
+      - package: "isc-dhcp-server"
+        type: "service"
+        config_file: "dhcpd.conf"  # Logik sucht diese lokal
+      - package: "iptables"
+        type: "tool"
+        post_cmd: "iptables -t nat -A POSTROUTING -j MASQUERADE"
+
+  clients:
+    - hostname: "client-01"
+      name: "aaa"
+      ram: 512
+      vcpus: 1
+      disk: 20
+      networks: ["br-intern"]
+      require: "gw-router"
+
+  servers:
+    - hostname: "web-srv-01"
+      name: "aaa"
+      type: "https"
+      ram: 512
+      vcpus: 2
+      disk: 20
+      networks: ["br-intern"]
+      require: "gw-router"

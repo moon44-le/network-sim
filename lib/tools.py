@@ -40,3 +40,11 @@ class UI:
 
         # 3. (Optional) Tab-Completion aktivieren (sehr komfortabel!)
         readline.parse_and_bind("tab: complete")
+
+class GatewayManager:
+    def provision(self):
+        # Kein try-except hier! Die Logik bleibt flach.
+        self.install_pkg("isc-dhcp-server")
+        self.upload_config("dhcpd.conf")
+        self.execute_remote("systemctl restart isc-dhcp-server")
+        
