@@ -2,6 +2,7 @@ import subprocess
 
 class NetworkSimError(Exception): pass
 class ProvisioningError(NetworkSimError): pass
+class HypervisorError(NetworkSimError): pass
 
 def safe_execute(cmd_list, description):
     """
@@ -20,12 +21,3 @@ def safe_execute(cmd_list, description):
             f"Exit-Code: {e.returncode}\n"
             f"Fehlermeldung: {e.stderr.strip()}"
         )
-
-# --- Anwendung in der Gateway-Logik ---
-
-def setup_gateway(ip):
-    target = f"root@{ip}"
-    
-    # Nah am Befehl: Jeder Aufruf prüft sich selbst
-    safe_execute(["ssh", target, "apt-get update"], "Update der Paketquellen")
-    safe_execute(["ssh", target, "apt-get install -y iptables"], "Installation von iptables")

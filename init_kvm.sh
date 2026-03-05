@@ -19,7 +19,8 @@ sudo apt-get install -y \
     python3-pip \
     python3-yaml \
     python3-libvirt \
-    cloud-image-utils
+    cloud-image-utils \
+    ansible
 
 echo "Abhängigkeiten sind nun über das System installiert."
 

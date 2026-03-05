@@ -1,17 +1,14 @@
 import subprocess
 import os
 
-class Bridge:
-    @staticmethod
-    def exists(network_name="br-intern"):
+def exists(network_name="br-intern"):
         """Prüft, ob das Netzwerk in Libvirt definiert ist."""
         cmd = ["sudo", "virsh", "net-list", "--all", "--name"]
         result = subprocess.run(cmd, capture_output=True, text=True)
         networks = [n.strip() for n in result.stdout.splitlines()]
         return network_name in networks
 
-    @staticmethod
-    def stop(network_name="br-intern"):
+def stop(network_name="br-intern"):
         """Stoppt das Netzwerk (entspricht 'Link down'), löscht es aber nicht."""
         if not Bridge.is_running(network_name):
             print(f"[*] Bridge '{network_name}' ist bereits gestoppt.")
@@ -21,8 +18,7 @@ class Bridge:
         cmd = ["sudo", "virsh", "net-destroy", network_name]
         return subprocess.run(cmd, capture_output=True).returncode == 0
 
-    @staticmethod
-    def delete(network_name="br-intern"):
+def delete(network_name="br-intern"):
         """
         Löscht die Bridge komplett aus der Libvirt-Konfiguration.
         Stoppt sie vorher, falls sie noch läuft.
@@ -41,16 +37,14 @@ class Bridge:
             print(f"[+] Bridge '{network_name}' erfolgreich entfernt.")
         return success
 
-    @staticmethod
-    def is_running(network_name="br-intern"):
+def is_running(network_name="br-intern"):
         """Prüft, ob das Netzwerk aktiv ist (Status: active)."""
         cmd = ["sudo", "virsh", "net-list", "--name"]
         result = subprocess.run(cmd, capture_output=True, text=True)
         return network_name in [n.strip() for n in result.stdout.splitlines()]
     
 
-    @staticmethod
-    def create_isolated(network_name="br-intern"):
+def create_isolated(network_name="br-intern"):
         """
         Erstellt ein isoliertes virtuelles Netzwerk in Libvirt.
         In PHP wäre dies vergleichbar mit der Initialisierung eines Netzwerk-Objekts.

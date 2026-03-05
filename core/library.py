@@ -1,11 +1,12 @@
 import subprocess
 from .exceptions import ProvisioningError
 
-class Libery:
-    def __init__(self, user="root"):
-        self.user = user
+USER = "root"
 
-    def _execute(self, ip, cmd, description):
+# def __init__(self, user="root"):
+#    self.user = user
+
+def _execute(self, ip, cmd, description):
         """Interne Hilfsmethode für SSH-Aufrufe mit Error-Handling."""
         target = f"{self.user}@{ip}"
         try:
@@ -25,7 +26,7 @@ class Libery:
                 f"Ssh-Error: {e.stderr.strip()}"
             )
 
-    def install(self, ip, pkg_name, resource):
+def install(self, ip, pkg_name, resource):
         """Entscheidet basierend auf der Ressource, wie installiert wird."""
         
         if resource["type"] == "PACKAGE":
@@ -46,13 +47,11 @@ class Libery:
             self._execute(ip, f"apt-get update && apt-get install -y {pkg_name}", 
                           f"Remote Installation von {pkg_name}")
 
-    def execute_custom(self, ip, command):
+def execute_custom(self, ip, command):
         """Führt beliebige Post-Install Befehle aus (z.B. NAT-Regeln)."""
         return self._execute(ip, command, "Custom Post-Install Command")
     
-
-    @staticmethod
-    def get_all_host_vms():
+def get_all_host_vms():
         """
         Fragt den Hypervisor nach allen registrierten VMs.
         """
