@@ -16,16 +16,24 @@ class CLIHandler:
         )
 
     def show_terminal_overview(self):
-        # Die Logik zum Zeichnen der Tabelle
-        report = self.vm_mgr.get_all_statuses() # Logik kommt vom VMManager
-        print("\n" + "="*65)
-        print(f"{'DOMAIN':<12} | {'VM':<12} | {'SERVICE':<20} | {'SLUG'}")
-        print("-"*65)
-        # ... Schleife für die Anzeige ...
-        print("="*65 + "\n")
+        report = self.orchestrator.get_status_report()
+    
+        print("\n" + "="*70)
+        print(f"{'VM-NAME (SLUG)':<20} | {'ROLE':<12} | {'IP-ADDR':<15} | {'STATUS'}")
+        print("-" * 70)
+
+        for vm in report:
+            # Ein bisschen Optik: Running in Grün (wenn du Colorama nutzt) oder einfach Icons
+            color_icon = "●" if "RUNNING" in vm['status'] else "○"
+            
+            print(f"{vm['slug']:<20} | {vm['role']:<12} | {vm['ip']:<15} | {color_icon} {vm['status']}")
+        
+        print("="*70 + "\n")
 
     def start_shell(self):
         
+        self.show_terminal_overview()
+
         """Die Endlosschleife, die wir aus der main ausgelagert haben."""
         while True:
             cmd_input = input("KVM Manager: ").strip().lower()

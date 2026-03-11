@@ -1,6 +1,7 @@
 import subprocess
 import time
-from .exceptions import ConnectionError
+#from .exceptions import ConnectionError
+from .system import safe_execute
 
 def start(self):
         """Startet die KVM Instanz via Shell-Befehl."""
