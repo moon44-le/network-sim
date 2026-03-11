@@ -1,10 +1,18 @@
 import subprocess
+from .exceptions import ProvisioningError, HypervisorError
 
-def run(cmd, description="Befehl"):
-    """Zentrale Funktion für alle lokalen Shell-Befehle."""
+def safe_execute(cmd_list, description, error_type="provisioning"):
+    """
+    Führt Befehle aus und wirft je nach Kontext die richtige Exception.
+    """
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True, shell=isinstance(cmd, str))
-        return result.stdout.strip()
+        print(f"[*] {description}...")
+        return subprocess.run(cmd_list, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
-        print(f"[!] Fehler bei {description}: {e.stderr or e.stdout}")
-        return None
+        msg = (f"Fehler bei: {description}\n"
+               f"Exit-Code: {e.returncode}\n"
+               f"Details: {e.stderr.strip()}")
+        
+        if error_type == "hypervisor":
+            raise HypervisorError(msg)
+        raise ProvisioningError(msg)

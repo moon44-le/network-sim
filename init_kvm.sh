@@ -15,6 +15,7 @@ sudo apt-get install -y \
     libvirt-clients \
     bridge-utils \
     virt-manager \
+    virt-install \
     wget \
     python3-pip \
     python3-yaml \

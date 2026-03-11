@@ -3,8 +3,8 @@ from .exceptions import ProvisioningError
 
 USER = "root"
 
-# def __init__(self, user="root"):
-#    self.user = user
+def __init__(self, user="root"):
+    self.user = user
 
 def _execute(self, ip, cmd, description):
         """Interne Hilfsmethode für SSH-Aufrufe mit Error-Handling."""
@@ -50,7 +50,8 @@ def install(self, ip, pkg_name, resource):
 def execute_custom(self, ip, command):
         """Führt beliebige Post-Install Befehle aus (z.B. NAT-Regeln)."""
         return self._execute(ip, command, "Custom Post-Install Command")
-    
+
+# move to hypervisor    
 def get_all_host_vms():
         """
         Fragt den Hypervisor nach allen registrierten VMs.

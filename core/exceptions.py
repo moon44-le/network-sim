@@ -3,12 +3,9 @@ import subprocess
 class NetworkSimError(Exception): pass
 class ProvisioningError(NetworkSimError): pass
 class HypervisorError(NetworkSimError): pass
+class ConnectionError(NetworkSimError): pass
 
 def safe_execute(cmd_list, description):
-    """
-    Der Wrapper: Er ist nah am Befehl und 'übersetzt' 
-    Systemfehler in deine Logik-Fehler.
-    """
     try:
         print(f"[*] {description}...")
         # check=True sorgt für das 'Throw early'
